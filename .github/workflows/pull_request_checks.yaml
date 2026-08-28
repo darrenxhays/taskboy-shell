@@ -1,0 +1,21 @@
+name: pull request checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install pinned taskboy
+        run: pip install -r requirements.txt
+      # exit 64 on config errors, against exactly the version this repo deploys
+      - name: validate config
+        run: taskboy setup --check --no-validate
+        env:
+          TASKBOY_CONFIG_PATH: config/config.yaml

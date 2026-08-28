@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+# secrets live in .env locally (written by `taskboy setup`), never in git
+.env
+local/
+.DS_Store

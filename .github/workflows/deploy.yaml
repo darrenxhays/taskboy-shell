@@ -1,0 +1,82 @@
+name: deploy
+
+# every merge to main deploys: pulumi up, then ship the pinned taskboy version and
+# this repo's config/ + skills/ to the host via ssm (remote-update.sh pip-upgrades the
+# venv, syncs the config bundle, and restarts — running tasks requeue and resume).
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  BUCKET: ${{ vars.DEPLOY_BUCKET }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+
+jobs:
+  # the target environment is operator-chosen: set the DEPLOY_ENVIRONMENT repository
+  # variable to the name of your stack (Pulumi.<environment>.yaml)
+  pulumi:
+    uses: ./.github/workflows/deploy_pulumi.yaml
+    with:
+      environment: ${{ vars.DEPLOY_ENVIRONMENT }}
+    secrets: inherit
+
+  deploy:
+    needs: [pulumi]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: read pinned version
+        run: |
+          spec=$(grep -Eo '^taskboy==[0-9][^[:space:]]*' requirements.txt || true)
+          if [ -z "$spec" ]; then
+            echo "requirements.txt must pin taskboy==X.Y.Z"
+            exit 1
+          fi
+          echo "PIP_SPEC=$spec" >> "$GITHUB_ENV"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOYER_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: upload config bundle
+        run: |
+          tar czf /tmp/config.tgz config skills
+          aws s3 cp /tmp/config.tgz "s3://$BUCKET/deploy/config-$GITHUB_SHA.tgz" --only-show-errors
+
+      - name: update host via ssm
+        run: |
+          command_id=$(aws ssm send-command \
+            --document-name AWS-RunShellScript \
+            --targets "Key=tag:Name,Values=${{ vars.HOST_INSTANCE_TAG }}" \
+            --comment "deploy $PIP_SPEC ($GITHUB_SHA)" \
+            --parameters "commands=[\"/opt/taskboy/deploy/remote-update.sh '$PIP_SPEC' 's3://$BUCKET/deploy/config-$GITHUB_SHA.tgz'\"],executionTimeout=[\"600\"]" \
+            --query 'Command.CommandId' --output text)
+          echo "command: $command_id"
+          for i in $(seq 1 60); do
+            sleep 10
+            invocation=$(aws ssm list-command-invocations --command-id "$command_id" --details \
+              --query 'CommandInvocations[0].{Status:Status,Output:CommandPlugins[0].Output}' --output json)
+            command_status=$(echo "$invocation" | python3 -c 'import json,sys; print(json.load(sys.stdin)["Status"])')
+            echo "status: $command_status"
+            case "$command_status" in
+              Success)
+                echo "$invocation" | python3 -c 'import json,sys; print(json.load(sys.stdin)["Output"])'
+                exit 0 ;;
+              Failed|Cancelled|TimedOut|Undeliverable|Terminated)
+                echo "$invocation" | python3 -c 'import json,sys; print(json.load(sys.stdin)["Output"])'
+                exit 1 ;;
+            esac
+          done
+          echo "timed out waiting for the ssm command"
+          exit 1

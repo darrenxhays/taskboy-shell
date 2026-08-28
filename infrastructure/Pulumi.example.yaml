@@ -1,0 +1,10 @@
+# template stack config — copy to Pulumi.<environment>.yaml for the environment you
+# choose (e.g. Pulumi.production.yaml) and set taskboy:environment to match. the same
+# name goes in the DEPLOY_ENVIRONMENT repository variable so CI deploys that stack.
+config:
+  aws:region: "us-east-1"
+  taskboy:environment: "YOUR_ENVIRONMENT"
+  taskboy:host_account_id: "YOUR_ACCOUNT_ID"
+  # optional keys (see README.md): resource_prefix, host_environment, dashboard_domain,
+  # route53_zone, vpc_source, vpc_stack_ref, vpc_id, private_subnet_ids, public_subnet_ids,
+  # github_repo, assume_external_id, secret_name
