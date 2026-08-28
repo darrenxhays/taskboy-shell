@@ -85,11 +85,11 @@ Optional read-only cloud diagnostics: allowed services, allowed regions, and per
 
 ### dashboard
 
-The Mission Control web UI: allowed viewer email domain, admin emails, optional public URL (enables dashboard links in Slack posts), the local-dev stand-in identity (`dashboard.dev_user_email`), and optional auto-commit of dashboard edits back to this shell repository — which needs a fine-grained PAT with Contents read/write on that one repository (`DASHBOARD_GITHUB_TOKEN`, verified live).
+The Mission Control web UI: allowed viewer email domain, admin emails, optional public URL (enables dashboard links in Slack posts), the local-dev stand-in identity (`dashboard.dev_user_email`), and optional auto-commit of dashboard edits back to this shell repository — which needs a fine-grained PAT with Contents read/write on that one repository (`DASHBOARD_GITHUB_TOKEN`, verified live). In deployed environments the app trusts the ALB's signed identity header only when its `signer` claim matches `dashboard.expected_alb_arn` — set it to the ALB's ARN (the `alb_arn` Pulumi output); with it unset, every dashboard request behind an ALB is rejected.
 
 ### content
 
-Conventions and personalities. Offers to create `config/conventions.md` from the blank commented template shipped in the package (set as `conventions.file`, injected into every repo task as `CONVENTIONS.md`), and personality files for the agent and reviewer from the packaged `personality_agent.example.md` and `personality_reviewer.example.md`.
+Conventions, personalities, and help. Offers to create `config/conventions.md` from the blank commented template shipped in the package (set as `conventions.file`, injected into every repo task as `CONVENTIONS.md`), personality files for the agent and reviewer from the packaged `personality_agent.example.md` and `personality_reviewer.example.md`, and a curated `config/help.md` (set as `help.file`) that answers `help` / `/help` mentions and DMs instantly without creating a task — trim it to the skills you actually installed.
 
 ### skills
 
@@ -178,6 +178,7 @@ Dashboard SSO notes (the reference uses Auth0; any OIDC provider the ALB support
 - [ ] The ALB requests scope `openid email`; the provider connection used by your operators must supply a verified `email` claim — the app restricts viewers by `dashboard.allowed_email_domain` and grants mutations only to `dashboard.admin_emails`.
 - [ ] Record the provider domain as a **bare hostname** (no `https://`, no trailing slash) plus the client id and secret; store them as the `auth0_domain` / `auth0_client_id` / `auth0_client_secret` bundle keys.
 - [ ] On the host, set `dashboard.enabled: true`, `dashboard.bind: 0.0.0.0`, and `dashboard.port: 8787` — the instance security group only admits the ALB on that port.
+- [ ] Set `dashboard.expected_alb_arn` to the `alb_arn` Pulumi output. The regional ALB key endpoint serves signing keys for every ALB in the region, so the app pins the identity header's `signer` claim to your ALB and rejects everything else; leaving it empty fails closed.
 - [ ] After `pulumi up`, browse to `https://<dashboard_domain>`, complete sign-in, and confirm an allowed-domain non-admin can read but not mutate while an admin email can edit.
 
 For additional environments the agent should diagnose, create more stacks (each gets only the `{resource_prefix}-{environment}-diagnostics` role) and add their ARNs to `diagnostics_role_arns` in `config/services/aws.yaml`.

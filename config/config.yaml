@@ -116,6 +116,9 @@ usage_limits: # total-token ceilings for dashboard remaining-capacity meters; ze
 conventions: # engineering conventions doc injected into repo-targeting task workspaces as CONVENTIONS.md
   file: "" # e.g. conventions.md, relative to this config file's directory; empty = disabled
 
+help: # curated `/help` reply text; re-read on every request, editable in the dashboard
+  file: "" # e.g. help.md, relative to this config file's directory; empty disables the /help fast path entirely
+
 dashboard: # web ui; served behind an alb doing sso in deployed envs
   enabled: false
   bind: 127.0.0.1 # 0.0.0.0 on the host (the security group only admits the alb)
@@ -124,6 +127,7 @@ dashboard: # web ui; served behind an alb doing sso in deployed envs
   public_url: "" # e.g. https://agent.example.com; empty disables dashboard links in slack posts
   admin_emails: [] # management surface: editing, cancel/retry
   dev_user_email: dev@example.com # local-only stand-in identity when no alb header is present
+  expected_alb_arn: "" # required when enabled: true; the ALB's ARN (pulumi output `alb_arn`) — must match the oidc header's "signer" claim
   auto_commit: # empty repo disables committing dashboard edits back to git
     repo: "" # org/repo that holds this config
     branch: main
@@ -139,3 +143,7 @@ retention: # days (MEM-012, §12)
   memory_days: 90
   audit_days: 365
   slack_events_days: 7
+  errors_days: 30 # errors.traceback/context_json rows can be multi-KB; not hash-chained, safe to purge
+  # usage, admin_events, and task_events are kept forever
+  blocked_task_max_days: 10 # a task stuck BLOCKED (unanswered questions/permission request) this long auto-fails
+  blocked_task_reminder_days: 5 # thread reminder posted partway through the blocked_task_max_days window

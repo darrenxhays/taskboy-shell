@@ -175,3 +175,6 @@ if environment == host_environment and dashboard_domain:
     )
 
     pulumi.export("dashboard_url", f"https://{dashboard_domain}")
+    # config.yaml's dashboard.expected_alb_arn must be set to this — the app pins the oidc
+    # identity header's "signer" claim to it and rejects tokens signed by any other alb
+    pulumi.export("alb_arn", alb.arn)
