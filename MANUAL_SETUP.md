@@ -236,7 +236,7 @@ Paths are relative to `config.yaml`'s directory, and every configured file must 
 
 ### Skills
 
-`skills/` starts empty; the workflow templates ship inside the package. Don't copy them by hand — once your config files are filled in, run the wizard's skills picker on its own:
+`skills/` starts empty, and for the app-driven features that's already enough: the five skills the application itself invokes — `/review`, `/discoverissues`, `/refineissue`, `/spec2pr`, `/implementapprovedissues` — are built into the package and render at task time with your configured names, so review polling and the issues pipeline work with nothing installed. For the rest (or to create an editable override of a built-in), don't copy templates by hand — once your config files are filled in, run the wizard's skills picker on its own:
 
 ```bash
 taskboy setup --step skills

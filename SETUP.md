@@ -93,7 +93,7 @@ Conventions, personalities, and help. The content files are already seeded next 
 
 ### skills
 
-The skills picker. `skills/` starts empty; the 13 workflow templates ship inside the package (`/review`, `/slack2pr`, `/jira2pr`, `/discoverissues`, …). The wizard lists them (marking any whose integration you skipped — `jira2pr`/`slack2jira` need Jira, `release`/`discoverissues` need `github.self_repo`), instantiates your selection into `skills/` with every `{{variable}}` filled from your earlier answers, and pulls in transitive `requires` automatically. For manual installation, copy the templates out with `taskboy assets templates .` and follow the README in the extracted `templates/skills/`.
+The skills picker. `skills/` starts empty, but the five skills the application itself invokes — `/review`, `/discoverissues`, `/refineissue`, `/spec2pr`, `/implementapprovedissues` — are **built in and already active** (the picker marks them ◆): the review poller, issues pipeline, and scheduled runs work without installing anything. The wizard lists all 13 templates (marking any whose integration you skipped — `jira2pr`/`slack2jira` need Jira, `release`/`discoverissues` need `github.self_repo`), instantiates your selection into `skills/` with every `{{variable}}` filled from your earlier answers, and pulls in transitive `requires` automatically. Installing a built-in's template creates an editable override that takes precedence over the packaged version.
 
 ### secrets
 
