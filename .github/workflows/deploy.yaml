@@ -5,6 +5,11 @@ name: deploy
 # venv, syncs the config bundle, and restarts — running tasks requeue and resume).
 # under hubflow (gitflow), main only moves when `git hf release|hotfix finish` merges
 # and pushes it — so finishing a release IS the deploy; develop never deploys.
+#
+# both jobs are gated on the DEPLOY_ENVIRONMENT repository variable: it only exists on a
+# real deployment repo (set during setup, section 3c of SETUP.md), so the taskboy-shell
+# template repo itself — and any instance not yet wired to AWS — skips cleanly instead
+# of attempting (and failing) a deploy.
 
 on:
   push:
@@ -26,12 +31,14 @@ jobs:
   # the target environment is operator-chosen: set the DEPLOY_ENVIRONMENT repository
   # variable to the name of your stack (Pulumi.<environment>.yaml)
   pulumi:
+    if: vars.DEPLOY_ENVIRONMENT != ''
     uses: ./.github/workflows/deploy_pulumi.yaml
     with:
       environment: ${{ vars.DEPLOY_ENVIRONMENT }}
     secrets: inherit
 
   deploy:
+    if: vars.DEPLOY_ENVIRONMENT != ''
     needs: [pulumi]
     runs-on: ubuntu-latest
     steps:

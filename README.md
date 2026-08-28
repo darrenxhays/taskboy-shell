@@ -25,7 +25,7 @@ infrastructure/         reference AWS deployment (Pulumi)
 
 ## How changes reach your deployment
 
-This repo follows GitFlow via [HubFlow](https://datasift.github.io/gitflow/): day-to-day changes land on `develop` through PRs, and `main` only moves when `git hf release finish` (or `hotfix finish`) merges and pushes it. Every merge to `main` deploys: the workflow runs `pulumi up`, bundles `config/` + `skills/`, and invokes the host's updater over SSM, which pip-installs the pinned `taskboy` version, syncs the config bundle, and restarts the service (restarts are safe — running tasks requeue and resume).
+This repo follows GitFlow via [HubFlow](https://datasift.github.io/gitflow/): day-to-day changes land on `develop` through PRs, and `main` only moves when `git hf release finish` (or `hotfix finish`) merges and pushes it. Every merge to `main` deploys — once the `DEPLOY_ENVIRONMENT` repository variable is set (SETUP.md section 3c); without it the workflow skips cleanly, so this template repo and not-yet-wired instances never attempt a deploy. The workflow runs `pulumi up`, bundles `config/` + `skills/`, and invokes the host's updater over SSM, which pip-installs the pinned `taskboy` version, syncs the config bundle, and restarts the service (restarts are safe — running tasks requeue and resume).
 
 - **Config change**: edit `config/` on a feature branch, open a PR to `develop` (CI validates it against the pinned version), merge.
 - **Turn a service on/off**: flip `enabled` in `config/services/<name>.yaml` (slack, github, jira, confluence, sentry, aws), PR to `develop`, merge.
