@@ -3,6 +3,8 @@ name: deploy
 # every merge to main deploys: pulumi up, then ship the pinned taskboy version and
 # this repo's config/ + skills/ to the host via ssm (remote-update.sh pip-upgrades the
 # venv, syncs the config bundle, and restarts — running tasks requeue and resume).
+# under hubflow (gitflow), main only moves when `git hf release|hotfix finish` merges
+# and pushes it — so finishing a release IS the deploy; develop never deploys.
 
 on:
   push:

@@ -130,7 +130,7 @@ dashboard: # web ui; served behind an alb doing sso in deployed envs
   expected_alb_arn: "" # required when enabled: true; the ALB's ARN (pulumi output `alb_arn`) — must match the oidc header's "signer" claim
   auto_commit: # empty repo disables committing dashboard edits back to git
     repo: "" # org/repo that holds this config
-    branch: main
+    branch: develop # hubflow: dashboard edits land on the integration branch and ship with the next release; use main only if you don't run gitflow
     committer_name: "" # git committer identity on dashboard auto-commits; empty = "<agent name> Dashboard"
     committer_email: "" # required when repo is set
 
