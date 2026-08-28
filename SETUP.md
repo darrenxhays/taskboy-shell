@@ -10,7 +10,7 @@ The fast path is the interactive wizard (`taskboy setup`, section 2). It prints 
 
 - [ ] Install Git and confirm `git --version` succeeds.
 - [ ] Install Python 3.12 and confirm `python3.12 --version` succeeds.
-- [ ] Create your deployment checkout. Easiest: `pip install taskboy` in a fresh venv and run `taskboy setup` in an empty directory — its first step offers to scaffold this template into a directory of your choosing (a fresh-history clone, the CLI equivalent of "Use this template") and continues the wizard inside it; afterwards create a private GitHub repo and push. Or do it by hand: create your own **private repository from the `taskboy-shell` template** ("Use this template" on GitHub — not a fork), clone it, and install the pinned harness. Everything the application needs (skill templates, config examples, host deploy files, the built dashboard) ships inside the wheel; this checkout holds only *your* files (`config/`, `.env`, `skills/`, `infrastructure/`):
+- [ ] Create your deployment checkout. Easiest: `pip install taskboy` in a fresh venv and run `taskboy setup` in an empty directory — its first step offers to scaffold this template into a directory of your choosing (a fresh-history clone, the CLI equivalent of "Use this template"), seeds every content file (personalities, conventions, help) with its final name, and then asks whether to continue with the guided wizard or leave you to edit the config files yourself per [MANUAL_SETUP.md](MANUAL_SETUP.md); afterwards create a private GitHub repo and push. Or do it by hand: create your own **private repository from the `taskboy-shell` template** ("Use this template" on GitHub — not a fork), clone it, and install the pinned harness. Everything the application needs (skill templates, config examples, host deploy files, the built dashboard) ships inside the wheel; this checkout holds only *your* files (`config/`, `.env`, `skills/`, `infrastructure/`):
 
   ```bash
   git clone https://github.com/<your-org>/<your-shell-repo>.git
@@ -89,7 +89,7 @@ The Mission Control web UI: allowed viewer email domain, admin emails, optional 
 
 ### content
 
-Conventions, personalities, and help. Offers to create `config/conventions.md` from the blank commented template shipped in the package (set as `conventions.file`, injected into every repo task as `CONVENTIONS.md`), personality files for the agent and reviewer from the packaged `personality_agent.example.md` and `personality_reviewer.example.md`, and a curated `config/help.md` (set as `help.file`) that answers `help` / `/help` mentions and DMs instantly without creating a task — trim it to the skills you actually installed.
+Conventions, personalities, and help. The content files are already seeded next to `config.yaml` (the scaffold step put them there; the wizard creates any missing one from its packaged template): `conventions.md` (set as `conventions.file`, injected into every repo task as `CONVENTIONS.md`), `personality_agent.md` / `personality_reviewer.md`, and a curated `help.md` (set as `help.file`) answering `help` / `/help` mentions and DMs instantly without creating a task — the wizard fills in its agent-name and dashboard-URL placeholders; trim it to the skills you actually installed.
 
 ### skills
 
