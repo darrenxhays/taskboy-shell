@@ -10,7 +10,7 @@ The fast path is the interactive wizard (`taskboy setup`, section 2). It prints 
 
 - [ ] Install Git and confirm `git --version` succeeds.
 - [ ] Install Python 3.12 and confirm `python3.12 --version` succeeds.
-- [ ] Create your own **private repository from the `taskboy-shell` template** ("Use this template" on GitHub — not a fork), clone it, and install the pinned harness. Everything the application needs (skill templates, config examples, host deploy files, the built dashboard) ships inside the wheel; this checkout holds only *your* files (`config/`, `.env`, `skills/`, `infrastructure/`):
+- [ ] Create your deployment checkout. Easiest: `pip install taskboy` in a fresh venv and run `taskboy setup` in an empty directory — its first step offers to scaffold this template into a directory of your choosing (a fresh-history clone, the CLI equivalent of "Use this template") and continues the wizard inside it; afterwards create a private GitHub repo and push. Or do it by hand: create your own **private repository from the `taskboy-shell` template** ("Use this template" on GitHub — not a fork), clone it, and install the pinned harness. Everything the application needs (skill templates, config examples, host deploy files, the built dashboard) ships inside the wheel; this checkout holds only *your* files (`config/`, `.env`, `skills/`, `infrastructure/`):
 
   ```bash
   git clone https://github.com/<your-org>/<your-shell-repo>.git
