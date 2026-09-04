@@ -141,12 +141,13 @@ The harness needs nothing more than a Linux host with systemd. The bootstrap ins
 - [ ] If the reviewer is enabled, require `reviewer credential broker started, github app credentials verified`.
 - [ ] Require either `slack intake enabled (team=…)` or, when Slack is not configured, `slack intake disabled (slack.team_id not set)`.
 - [ ] Require a `session integrations: github=… jira=… confluence=… sentry=… aws=… slack=…` line whose booleans match your configuration (each service is on only when its `config/services/<name>.yaml` sets `enabled: true` and its credentials are present).
+- [ ] When `diagnostics_role_arns` is configured in `config/services/aws.yaml`, require one `aws diagnostics role for <environment>: ok` line per environment. Treat `cannot be assumed` or `did not finish within` as a failed check; the dashboard **Config** page's **AWS diagnostics roles** panel shows the same status per environment and re-probes on load, and the fix is in that account's IAM trust policy or the role ARN in config.
 - [ ] Require the final `taskboy started (environment=…, db=…, audit_shipping=…)` line.
 - [ ] If any verification fails, stop and fix the credential, installation, config, or permission; do not accept the corresponding warning as a healthy deployment.
 
 ### 3b. AWS reference deployment
 
-`infrastructure/` is a **reference implementation**, one way to host the harness on AWS: a single private EC2 instance (no inbound, SSM-managed), an S3 deployment bucket for CI config bundles, a write-only Object Lock audit bucket, the Secrets Manager bundle shell, per-environment read-only diagnostics roles, and an optional SSO-protected ALB for the dashboard. It is a flat Pulumi Python project named `taskboy`. No environment ships preconfigured — pick a name for yours (`production`, `staging`, whatever fits your org), copy `infrastructure/Pulumi.example.yaml` to `infrastructure/Pulumi.<environment>.yaml`, and fill it in. The same name goes in the `DEPLOY_ENVIRONMENT` repository variable (section 3c) so CI deploys that stack.
+`infrastructure/` is a **reference implementation**, one way to host the harness on AWS: a single private EC2 instance (no inbound, SSM-managed), an S3 deployment bucket for CI config bundles, a write-only Object Lock audit bucket, the Secrets Manager bundle shell, per-environment read-only diagnostics roles, and an optional SSO-protected ALB for the dashboard. It is a flat Pulumi Python project named `taskboy`. No environment ships preconfigured — pick a name for yours (`production`, `staging`, whatever fits your org), copy `infrastructure/Pulumi.example.yaml` to `infrastructure/Pulumi.<environment>.yaml`, and fill it in — including `taskboy:account_id`, the AWS account the stack must be applied in; the program checks it against the active credentials before creating anything, so a stack can never land in the wrong account. The same name goes in the `DEPLOY_ENVIRONMENT` repository variable (section 3c) so CI deploys that stack.
 
 Stack config (namespace `taskboy`, per `infrastructure/README.md`):
 
@@ -215,6 +216,8 @@ Repository **secret**: `PULUMI_ACCESS_TOKEN`, with access to the `taskboy` stack
 - [ ] Watch the `deploy` workflow: the Pulumi job, then the config-bundle upload, then the SSM update must all succeed.
 - [ ] Verify `systemctl is-active taskboy` and the startup log lines from section 3a after deployment.
 - [ ] To roll back — a bad config change or a bad version alike — revert the offending commit on `main` (`git revert`) and push; the pipeline redeploys the previous state. Config sync is copy-over, so a rollback that *removes* a file (e.g. an installed skill) must be followed by deleting that file on the host manually.
+- [ ] Before pinning `taskboy` back below `0.4.0` (the release that introduced `access` permission requests and operator resume), decide every pending `access` request and resume or cancel any task waiting on one — `taskboy permissions <task_id>`, `taskboy grant|deny <task_id> access <system:scope>`, `taskboy resume <task_id>` — because older releases cannot decide `access` requests or resume a blocked task.
+- [ ] Upgrading an instance installed before `0.4.0`: add `taskboy:account_id` to each `infrastructure/Pulumi.<environment>.yaml` (the Pulumi program refuses to run without it), reinstall the Slack app after adding `files:read`, and run `sudo chgrp taskboy /etc/taskboy && sudo chmod 775 /etc/taskboy` (or re-run the packaged `install.sh`) so the dashboard Config editor can write next to the live config.
 
 ## 4. Appendices
 
@@ -224,7 +227,7 @@ One Slack app handles Socket Mode intake and every outbound message. The reviewe
 
 - [ ] Open `https://api.slack.com/apps`, choose **Create New App** → **From an app manifest**, pick the target workspace, and paste the contents of the packaged `slack_app_manifest.yaml` (the wizard prints its full path; `taskboy assets templates .` copies it out).
 - [ ] Before pasting, edit `display_information.name` and `features.bot_user.display_name` to your agent's name.
-- [ ] Review the manifest's bot scopes — they must stay in lockstep with what the service uses: `app_mentions:read`, `chat:write`, `channels:history`, `groups:history`, `reactions:write`, `files:write`, `im:history`, `im:write`, `users:read`, `users:read.email`.
+- [ ] Review the manifest's bot scopes — they must stay in lockstep with what the service uses: `app_mentions:read`, `chat:write`, `channels:history`, `groups:history`, `reactions:write`, `files:read`, `files:write`, `im:history`, `im:write`, `users:read`, `users:read.email`. Adding a scope to an existing app requires reinstalling it to the workspace (**Install App** → **Reinstall**).
 - [ ] Create the app, then open **Basic Information** → **Display Information**, upload your agent's icon, and save.
 - [ ] Open **Socket Mode**, enable it, and generate an app-level token with the `connections:write` scope; copy the `xapp-…` token into the password manager as `SLACK_APP_TOKEN`. (Socket Mode apps need no public request URL.)
 - [ ] Open **Install App** → **Install to Workspace**, authorize, and copy the `xoxb-…` **Bot User OAuth Token** as `SLACK_BOT_TOKEN`.

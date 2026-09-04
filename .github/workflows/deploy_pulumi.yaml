@@ -33,12 +33,28 @@ jobs:
           role-arn: ${{ vars.AWS_DEPLOYER_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      # refresh can rewrite stack state, so verify the credentials belong to this stack's account first
+      - name: verify aws account matches the stack
+        run: |
+          expected_account="$(awk '/^[[:space:]]*taskboy:account_id:/ { gsub(/"/, "", $2); print $2; exit }' "infrastructure/Pulumi.${{ inputs.environment }}.yaml")"
+          actual_account="$(aws sts get-caller-identity --query Account --output text)"
+          if [[ -z "$expected_account" ]]; then
+            echo "::error::infrastructure/Pulumi.${{ inputs.environment }}.yaml has no taskboy:account_id (see infrastructure/README.md)"
+            exit 1
+          fi
+          if [[ "$expected_account" != "$actual_account" ]]; then
+            echo "::error::stack '${{ inputs.environment }}' expects account ${expected_account} but credentials are for ${actual_account}"
+            exit 1
+          fi
+          echo "stack '${{ inputs.environment }}' account verified: ${actual_account}"
+
       - name: setup python
         uses: ./.github/actions/setup-python
 
       - uses: pulumi/actions@v4
         with:
           command: up
+          refresh: true # reconcile state with the account first; without this a resource created in the wrong account looks "unchanged" forever
           stack-name: ${{ vars.PULUMI_ORG }}/taskboy/${{ inputs.environment }}
           work-dir: infrastructure
           upsert: true

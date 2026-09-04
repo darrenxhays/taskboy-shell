@@ -16,6 +16,7 @@ the `DEPLOY_ENVIRONMENT` repository variable to the same name so CI deploys that
 |---|---|---|
 | `environment` | name of this stack's environment | required |
 | `host_account_id` | AWS account id where the host instance lives | required |
+| `account_id` | AWS account id this stack must be applied in; `__main__.py` compares it with the caller identity and refuses other credentials (for the host stack it equals `host_account_id`) | required |
 | `host_environment` | the single environment that hosts the harness; host-only resources (ec2, buckets, secret, orchestrator/deployer roles, alb) are created when `environment == host_environment` | the stack's `environment` |
 | `resource_prefix` | prefix for every physical name: `{resource_prefix}-{environment}-<thing>`; also the EC2 `Name` tag CI targets via SSM | `taskboy` |
 | `dashboard_domain` | public hostname for the dashboard (e.g. `agent.example.com`); empty/unset skips the ALB, target group, DNS records, and the Auth0 secret read entirely | unset |

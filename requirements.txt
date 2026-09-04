@@ -1,3 +1,3 @@
 # the application, released to PyPI from the taskboy repo.
 # upgrading your deployment = bumping this pin in a PR; merging to main deploys it.
-taskboy==0.1.0
+taskboy==0.4.0
