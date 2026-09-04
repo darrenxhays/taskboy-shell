@@ -234,6 +234,17 @@ help:
 
 Paths are relative to `config.yaml`'s directory, and every configured file must exist at startup — the loader fails fast on a missing one. Leave a key `""` to skip it (and optionally delete the unused seeded file).
 
+**Avatars.** The dashboard shows a profile picture for the agent and the reviewer wherever it names them (the sidebar logo, Mission Control, the Task Explorer, task detail). Sensible defaults ship inside the package, so nothing is required. To use your own, drop an image next to `config.yaml` — png/jpg/jpeg/webp/gif, at most 1 MiB, square looks best since it renders small — and point the key at it:
+
+```yaml
+agent:
+  avatar_file: avatar_agent.png
+reviewer:
+  avatar_file: avatar_reviewer.png       # only shown for reviewer tasks
+```
+
+Avatars are not editable from the dashboard; change the file here and release. Slack and GitHub keep showing their own app icons — set those in the Slack app and GitHub App settings.
+
 ### Skills
 
 `skills/` starts empty, and for the app-driven features that's already enough: the five skills the application itself invokes — `/review`, `/discoverissues`, `/refineissue`, `/spec2pr`, `/implementapprovedissues` — are built into the package and render at task time with your configured names, so review polling and the issues pipeline work with nothing installed. For the rest (or to create an editable override of a built-in), don't copy templates by hand — once your config files are filled in, run the wizard's skills picker on its own:
@@ -268,6 +279,7 @@ The loader validates `config.yaml` + `config/services/*.yaml` on every start (an
 - `reviewer.commit_email` is required whenever `reviewer.enabled: true`.
 - `dashboard.allowed_email_domain` is required (bare domain, no scheme) whenever `dashboard.enabled: true`; `dashboard.auto_commit.committer_email` is required whenever `auto_commit.repo` is set.
 - Every configured `personality_file`, `conventions.file`, `help.file`, and `task_started_messages_file` must exist on disk, relative to `config.yaml`.
+- Every configured `avatar_file` must exist, be a png/jpg/jpeg/webp/gif, and be at most 1 MiB; leave it `""` for the packaged default picture.
 - Roles: one role per user, at most one wildcard `"*"` role, `allowed_profiles` entries must exist in `profiles`, and any `roles.<name>.repos` list may only contain repos from `github.approved_repos`.
 - `orchestrator.runner` is exactly `echo` or `claude`; `cli_update.at_time` is 24-hour `HH:MM`; `cli_update.tzname` must be a real IANA timezone.
 - Legacy keys are rejected with pointers: `slack.bot_name` moved to `agent.name`, and per-user Slack settings moved to the top-level `roles` section.

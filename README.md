@@ -17,7 +17,7 @@ Commit what the wizard wrote (everything except `.env` — secrets never enter g
 
 ```text
 requirements.txt        the taskboy version this deployment runs (pinned)
-config/                 operator policy: config.yaml, services/<name>.yaml per connected service, personalities, conventions, started messages
+config/                 operator policy: config.yaml, services/<name>.yaml per connected service, personalities, avatars, conventions, started messages
 skills/                 installed skills, one directory per /skill
 infrastructure/         reference AWS deployment (Pulumi)
 .github/workflows/      PR config validation (develop + main) + deploy on merge to main
