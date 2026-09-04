@@ -22,8 +22,9 @@ ORCHESTRATOR_ROLE_ARN = f"arn:aws:iam::{host_account_id}:role/{resource_prefix}-
 
 # ---------------------------------------------------------------------------
 # diagnostics role — created in EVERY stack so the agent can read each
-# environment it is pointed at. assumed per task by the orchestrator with
-# session name ar-<task_id>, which makes every cloudtrail entry task-attributable.
+# environment it is pointed at. per-task aws_read calls assume it with session
+# name ar-<task_id>, making those cloudtrail entries task-attributable; the
+# startup/dashboard health probe uses ar-selfcheck and is not tied to a task.
 # writes are impossible: no mutating allows exist, plus explicit denies.
 # ---------------------------------------------------------------------------
 
