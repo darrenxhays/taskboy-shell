@@ -191,7 +191,7 @@ diagnostics_role_arns:                          # per-environment roles the orch
   staging: arn:aws:iam::<account-id>:role/<prefix>-staging-diagnostics
 ```
 
-Omit `diagnostics_role_arns` entirely for local-dev default credentials.
+Omit `diagnostics_role_arns` entirely for local-dev default credentials. When roles are configured, the `aws_read` tool requires an explicit `environment` argument (no silent default), the service probes every role at startup and on the dashboard Config page, and a session that hits an access denial is told to request `aws:<environment>` access so an operator can fix the role and resume it.
 
 ### Dashboard (optional)
 
